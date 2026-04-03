@@ -1,0 +1,22 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Build artifacts
+dist/
+
+# Virtual environments
+.venv
+
+# Environment / credentials
+.env
+
+# Claude Code
+.claude/
+
+# OS
+.DS_Store
