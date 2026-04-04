@@ -36,7 +36,17 @@ build-backend = "uv_build"
 dev = [
     "ruff>=0.11.0",
     "pyright>=1.1.400",
+    "pytest>=8.0",
+    "respx>=0.22.0",
+    "pytest-cov>=6.0",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["steam_mcp"]
+omit = ["src/steam_mcp/auth.py"]
 
 [tool.ruff]
 target-version = "py314"
