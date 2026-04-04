@@ -1,6 +1,6 @@
 # mcp-steam
 
-MCP server for Steam, focused on gaming library management, achievements, stats, and store discovery. 12 granular tools designed for use with Claude and other LLM agents.
+MCP server for Steam, focused on gaming library management, achievements, stats, and store discovery. 17 tools designed for use with Claude and other LLM agents.
 
 ## Prerequisites
 
@@ -86,6 +86,12 @@ Or if running from a local clone:
 
 ## Tools
 
+### User Resolution
+
+| Tool | Parameters | Description |
+|------|-----------|-------------|
+| `resolve_vanity_url` | `vanity_name` | Convert a custom profile URL name to a 64-bit Steam ID. |
+
 ### Library
 
 | Tool | Parameters | Description |
@@ -99,6 +105,8 @@ Or if running from a local clone:
 |------|-----------|-------------|
 | `get_game_details` | `app_id` | Store page info: description, price, genres, metacritic, platforms. |
 | `search_games` | `query`, `limit=10` | Search the Steam store. |
+| `get_current_players` | `app_id` | Live concurrent player count for a game. |
+| `get_game_schema` | `app_id` | Achievement and stat definitions for a game. |
 
 ### Achievements & Stats
 
@@ -124,8 +132,10 @@ Or if running from a local clone:
 
 | Tool | Parameters | Description |
 |------|-----------|-------------|
-| `get_player_summary` | (none) | Your profile: name, status, currently playing. |
-| `get_friend_list` | (none) | Your friends list with relationship info. |
+| `get_player_summary` | `steam_id=""` | Profile summary. Accepts Steam ID or vanity name; defaults to you. |
+| `get_friend_list` | `steam_id=""` | Friends list. Accepts Steam ID or vanity name; defaults to you. |
+| `get_player_bans` | `steam_id=""` | VAC, community, game, and trade ban status. Defaults to you. |
+| `get_steam_level` | `steam_id=""` | Steam level for a player. Defaults to you. |
 
 ### Featured
 

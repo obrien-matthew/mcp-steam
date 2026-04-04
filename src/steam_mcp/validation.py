@@ -21,6 +21,17 @@ def validate_limit(value: int, max_val: int = 50) -> int:
     return max(1, min(value, max_val))
 
 
+def validate_steam_id(value: str) -> str:
+    """Validate a Steam 64-bit ID string."""
+    value = value.strip()
+    if not value.isdigit() or len(value) < 10:
+        raise ValueError(
+            f"Invalid Steam ID: '{value}'. Expected a 64-bit numeric ID "
+            "(e.g. 76561198015781444). Use resolve_vanity_url to convert usernames."
+        )
+    return value
+
+
 def format_playtime(minutes: int) -> str:
     """Convert playtime in minutes to a human-readable string."""
     if minutes < 60:

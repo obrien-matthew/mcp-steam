@@ -171,6 +171,55 @@ def format_friend(friend: dict) -> dict:
     return result
 
 
+def format_player_bans(player: dict) -> dict:
+    """Format a player ban record."""
+    return {
+        "steamid": player.get("SteamId", ""),
+        "community_banned": player.get("CommunityBanned", False),
+        "vac_banned": player.get("VACBanned", False),
+        "vac_bans": player.get("NumberOfVACBans", 0),
+        "days_since_last_ban": player.get("DaysSinceLastBan", 0),
+        "game_bans": player.get("NumberOfGameBans", 0),
+        "economy_ban": player.get("EconomyBan", "none"),
+    }
+
+
+def format_game_schema(data: dict) -> dict:
+    """Format a game stats schema into achievement/stat definitions."""
+    available = data.get("availableGameStats", {})
+    achievements = []
+    for ach in available.get("achievements", []):
+        entry: dict[str, Any] = {
+            "name": ach.get("name", ""),
+            "display_name": ach.get("displayName", ""),
+        }
+        desc = ach.get("description")
+        if desc:
+            entry["description"] = desc
+        hidden = ach.get("hidden", 0)
+        if hidden:
+            entry["hidden"] = True
+        achievements.append(entry)
+
+    stats = []
+    for stat in available.get("stats", []):
+        stats.append({
+            "name": stat.get("name", ""),
+            "display_name": stat.get("displayName", ""),
+        })
+
+    result: dict[str, Any] = {
+        "game": data.get("gameName", ""),
+    }
+    if achievements:
+        result["achievements"] = achievements
+        result["achievement_count"] = len(achievements)
+    if stats:
+        result["stats"] = stats
+        result["stat_count"] = len(stats)
+    return result
+
+
 def format_featured_game(game: dict) -> dict:
     """Format a featured/sale game."""
     result: dict[str, Any] = {

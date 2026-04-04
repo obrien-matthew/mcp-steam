@@ -19,6 +19,26 @@ def _get_client() -> SteamClient:
 
 
 # ---------------------------------------------------------------------------
+# User Resolution
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+def resolve_vanity_url(vanity_name: str) -> str:
+    """Resolve a Steam vanity URL name to a 64-bit Steam ID.
+
+    Converts a custom profile URL name (e.g. "gabelogannewell") into
+    the numeric Steam ID needed by other tools. Useful when you only
+    know someone's profile name.
+    """
+    try:
+        result = _get_client().resolve_vanity_url(vanity_name)
+        return result
+    except (SteamError, ValueError) as e:
+        return f"Error: {e}"
+
+
+# ---------------------------------------------------------------------------
 # Library
 # ---------------------------------------------------------------------------
 
@@ -174,29 +194,99 @@ def get_game_news(app_id: str, count: int = 5) -> str:
 
 
 @mcp.tool()
-def get_player_summary() -> str:
-    """Get your Steam profile summary.
+def get_player_summary(steam_id: str = "") -> str:
+    """Get a Steam profile summary.
 
     Returns display name, online status, profile URL, and currently
     playing game (if any).
+
+    steam_id: optional Steam ID or vanity name. Defaults to your own profile.
     """
     try:
-        result = _get_client().get_player_summary()
+        result = _get_client().get_player_summary(steam_id or None)
         return json.dumps(result, indent=2)
     except (SteamError, ValueError) as e:
         return f"Error: {e}"
 
 
 @mcp.tool()
-def get_friend_list() -> str:
-    """Get your Steam friends list.
+def get_friend_list(steam_id: str = "") -> str:
+    """Get a Steam friends list.
 
     Returns friend Steam IDs, relationship status, and when you
     became friends.
+
+    steam_id: optional Steam ID or vanity name. Defaults to your own profile.
     """
     try:
-        results = _get_client().get_friend_list()
+        results = _get_client().get_friend_list(steam_id or None)
         return json.dumps(results, indent=2)
+    except (SteamError, ValueError) as e:
+        return f"Error: {e}"
+
+
+# ---------------------------------------------------------------------------
+# Player Info
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+def get_player_bans(steam_id: str = "") -> str:
+    """Get ban status for a Steam player.
+
+    Returns VAC bans, community bans, game bans, and trade/economy ban status.
+
+    steam_id: optional Steam ID or vanity name. Defaults to your own profile.
+    """
+    try:
+        result = _get_client().get_player_bans(steam_id or None)
+        return json.dumps(result, indent=2)
+    except (SteamError, ValueError) as e:
+        return f"Error: {e}"
+
+
+@mcp.tool()
+def get_steam_level(steam_id: str = "") -> str:
+    """Get the Steam level for a player.
+
+    steam_id: optional Steam ID or vanity name. Defaults to your own profile.
+    """
+    try:
+        result = _get_client().get_steam_level(steam_id or None)
+        return json.dumps(result, indent=2)
+    except (SteamError, ValueError) as e:
+        return f"Error: {e}"
+
+
+# ---------------------------------------------------------------------------
+# Game Info (continued)
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+def get_current_players(app_id: str) -> str:
+    """Get the current number of players in a Steam game.
+
+    Returns the live concurrent player count.
+    """
+    try:
+        result = _get_client().get_current_players(app_id)
+        return json.dumps(result, indent=2)
+    except (SteamError, ValueError) as e:
+        return f"Error: {e}"
+
+
+@mcp.tool()
+def get_game_schema(app_id: str) -> str:
+    """Get achievement and stat definitions for a Steam game.
+
+    Returns achievement display names, descriptions, and hidden status,
+    plus stat definitions. Useful for understanding what stats and
+    achievements a game tracks.
+    """
+    try:
+        result = _get_client().get_game_schema(app_id)
+        return json.dumps(result, indent=2)
     except (SteamError, ValueError) as e:
         return f"Error: {e}"
 

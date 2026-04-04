@@ -11,12 +11,14 @@ from .formatting import (
     format_featured_game,
     format_friend,
     format_game_details,
+    format_game_schema,
     format_news_item,
     format_owned_game,
+    format_player_bans,
     format_player_summary,
     format_wishlist_item,
 )
-from .validation import validate_app_id, validate_limit
+from .validation import validate_app_id, validate_limit, validate_steam_id
 
 STEAM_API_BASE = "https://api.steampowered.com"
 STORE_API_BASE = "https://store.steampowered.com"
@@ -71,6 +73,39 @@ class SteamClient:
         resp = self._http.get(url, params=params or {})
         resp.raise_for_status()
         return resp.json()
+
+    # -- User Resolution --
+
+    def _resolve_user(self, steam_id: str | None = None) -> str:
+        """Return a validated 64-bit Steam ID.
+
+        If None, returns the configured user. If the value looks like a
+        vanity URL name (non-numeric or too short), resolves it first.
+        """
+        if steam_id is None:
+            return self._steam_id
+        steam_id = steam_id.strip()
+        if steam_id.isdigit() and len(steam_id) >= 10:
+            return validate_steam_id(steam_id)
+        # Treat as vanity URL name
+        return self.resolve_vanity_url(steam_id)
+
+    def resolve_vanity_url(self, vanity_name: str) -> str:
+        """Resolve a Steam vanity URL name to a 64-bit Steam ID."""
+        try:
+            data = self._api_request(
+                "ISteamUser/ResolveVanityURL/v1/",
+                {"vanityurl": vanity_name.strip()},
+            )
+            response = data.get("response", {})
+            if response.get("success") != 1:
+                raise SteamError(
+                    f"Could not resolve vanity URL '{vanity_name}'. "
+                    "Check the username and try again."
+                )
+            return response["steamid"]
+        except httpx.HTTPStatusError as e:
+            self._handle_error(e, "resolving vanity URL")
 
     # -- Library --
 
@@ -264,11 +299,12 @@ class SteamClient:
 
     # -- Profile --
 
-    def get_player_summary(self) -> dict:
+    def get_player_summary(self, steam_id: str | None = None) -> dict:
+        sid = self._resolve_user(steam_id)
         try:
             data = self._api_request(
                 "ISteamUser/GetPlayerSummaries/v2/",
-                {"steamids": self._steam_id},
+                {"steamids": sid},
             )
             players = data.get("response", {}).get("players", [])
             if not players:
@@ -277,16 +313,76 @@ class SteamClient:
         except httpx.HTTPStatusError as e:
             self._handle_error(e, "fetching player summary")
 
-    def get_friend_list(self) -> list[dict]:
+    def get_friend_list(self, steam_id: str | None = None) -> list[dict]:
+        sid = self._resolve_user(steam_id)
         try:
             data = self._api_request(
                 "ISteamUser/GetFriendList/v1/",
-                {"steamid": self._steam_id, "relationship": "friend"},
+                {"steamid": sid, "relationship": "friend"},
             )
             friends = data.get("friendslist", {}).get("friends", [])
             return [format_friend(f) for f in friends]
         except httpx.HTTPStatusError as e:
             self._handle_error(e, "fetching friend list")
+
+    # -- Player Info --
+
+    def get_player_bans(self, steam_id: str | None = None) -> dict:
+        sid = self._resolve_user(steam_id)
+        try:
+            data = self._api_request(
+                "ISteamUser/GetPlayerBans/v1/",
+                {"steamids": sid},
+            )
+            players = data.get("players", [])
+            if not players:
+                raise SteamError("Player not found")
+            return format_player_bans(players[0])
+        except httpx.HTTPStatusError as e:
+            self._handle_error(e, "fetching player bans")
+
+    def get_steam_level(self, steam_id: str | None = None) -> dict:
+        sid = self._resolve_user(steam_id)
+        try:
+            data = self._api_request(
+                "IPlayerService/GetSteamLevel/v1/",
+                {"steamid": sid},
+            )
+            level = data.get("response", {}).get("player_level", 0)
+            return {"steam_id": sid, "level": level}
+        except httpx.HTTPStatusError as e:
+            self._handle_error(e, "fetching Steam level")
+
+    # -- Game Info (continued) --
+
+    def get_current_players(self, app_id: str) -> dict:
+        app_id_int = validate_app_id(app_id)
+        try:
+            data = self._api_request(
+                "ISteamUserStats/GetNumberOfCurrentPlayers/v1/",
+                {"appid": app_id_int},
+            )
+            count = data.get("response", {}).get("player_count", 0)
+            return {"app_id": app_id_int, "player_count": count}
+        except httpx.HTTPStatusError as e:
+            self._handle_error(e, "fetching current player count")
+
+    def get_game_schema(self, app_id: str) -> dict:
+        app_id_int = validate_app_id(app_id)
+        try:
+            data = self._api_request(
+                "ISteamUserStats/GetSchemaForGame/v2/",
+                {"appid": app_id_int},
+            )
+            schema = data.get("game", {})
+            if not schema:
+                raise SteamError(
+                    f"No schema found for app {app_id_int}. "
+                    "The game may not have achievements or stats."
+                )
+            return format_game_schema(schema)
+        except httpx.HTTPStatusError as e:
+            self._handle_error(e, "fetching game schema")
 
     # -- Featured --
 
