@@ -18,5 +18,12 @@ dist/
 # Claude Code
 .claude/
 
+# Test / coverage
+.coverage
+htmlcov/
+
+# Plans (local working docs)
+docs/plans/
+
 # OS
 .DS_Store
