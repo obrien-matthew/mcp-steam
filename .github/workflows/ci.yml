@@ -21,10 +21,10 @@ jobs:
       - run: uv sync --frozen
 
       - name: Ruff lint
-        run: uv run ruff check src/
+        run: uv run ruff check src/ tests/
 
       - name: Ruff format
-        run: uv run ruff format --check src/
+        run: uv run ruff format --check src/ tests/
 
       - name: Pyright
         run: uv run pyright src/
