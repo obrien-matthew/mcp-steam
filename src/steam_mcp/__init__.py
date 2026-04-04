@@ -1,3 +1,5 @@
+"""MCP server for Steam gaming library, achievements, stats, and store search."""
+
 from .server import mcp
 
 
