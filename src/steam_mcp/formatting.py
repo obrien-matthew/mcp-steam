@@ -85,7 +85,7 @@ def format_achievement(ach: dict, global_percentages: dict | None = None) -> dic
     if unlock_time > 0:
         result["unlocked_at"] = datetime.fromtimestamp(unlock_time, tz=UTC).isoformat()
     if global_percentages and result["name"] in global_percentages:
-        result["global_percent"] = round(global_percentages[result["name"]], 1)
+        result["global_percent"] = round(float(global_percentages[result["name"]]), 1)
     return result
 
 

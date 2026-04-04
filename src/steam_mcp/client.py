@@ -216,7 +216,7 @@ class SteamClient:
             return [
                 {
                     "name": a.get("name", ""),
-                    "percent": round(a.get("percent", 0.0), 1),
+                    "percent": round(float(a.get("percent", 0.0)), 1),
                 }
                 for a in achievements
             ]
