@@ -1,6 +1,6 @@
 # mcp-steam
 
-MCP server for Steam, focused on gaming library management, achievements, stats, and store discovery. 17 tools designed for use with Claude and other LLM agents.
+MCP server for Steam, focused on gaming library management, achievements, stats, and store discovery. 20 tools designed for use with Claude and other LLM agents.
 
 ## Prerequisites
 
@@ -107,6 +107,8 @@ Or if running from a local clone:
 | `search_games` | `query`, `limit=10` | Search the Steam store. |
 | `get_current_players` | `app_id` | Live concurrent player count for a game. |
 | `get_game_schema` | `app_id` | Achievement and stat definitions for a game. |
+| `get_app_reviews` | `app_id`, `review_type="all"`, `limit=10` | User reviews with recommendation, playtime, and helpfulness. |
+| `get_package_details` | `package_id` | Bundle/package pricing, included apps, and platforms. |
 
 ### Achievements & Stats
 
@@ -137,11 +139,12 @@ Or if running from a local clone:
 | `get_player_bans` | `steam_id=""` | VAC, community, game, and trade ban status. Defaults to you. |
 | `get_steam_level` | `steam_id=""` | Steam level for a player. Defaults to you. |
 
-### Featured
+### Store Discovery
 
 | Tool | Parameters | Description |
 |------|-----------|-------------|
 | `get_featured_games` | (none) | Currently featured and on-sale games. |
+| `get_featured_categories` | (none) | Top Sellers, New Releases, Specials, Coming Soon, and more. |
 
 ## Steam Web API Notes
 

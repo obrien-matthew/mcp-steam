@@ -292,6 +292,60 @@ def get_game_schema(app_id: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Store Discovery
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+def get_app_reviews(
+    app_id: str,
+    review_type: str = "all",
+    limit: int = 10,
+) -> str:
+    """Get user reviews for a Steam game.
+
+    Returns review text, recommendation, playtime, and helpfulness votes.
+    Includes summary with total positive/negative counts and score description.
+
+    review_type: "all" (default), "positive", or "negative".
+    """
+    try:
+        result = _get_client().get_app_reviews(app_id, review_type, limit)
+        return json.dumps(result, indent=2)
+    except (SteamError, ValueError) as e:
+        return f"Error: {e}"
+
+
+@mcp.tool()
+def get_featured_categories() -> str:
+    """Get Steam store featured categories.
+
+    Returns games organized by category: Top Sellers, New Releases,
+    Specials, Coming Soon, and more. Each category includes game names,
+    prices, and discounts.
+    """
+    try:
+        result = _get_client().get_featured_categories()
+        return json.dumps(result, indent=2)
+    except (SteamError, ValueError) as e:
+        return f"Error: {e}"
+
+
+@mcp.tool()
+def get_package_details(package_id: str) -> str:
+    """Get details for a Steam package or bundle.
+
+    Returns package name, price, discount, included apps, platforms,
+    and release date. Use for bundles and multi-game packages.
+    """
+    try:
+        result = _get_client().get_package_details(package_id)
+        return json.dumps(result, indent=2)
+    except (SteamError, ValueError) as e:
+        return f"Error: {e}"
+
+
+# ---------------------------------------------------------------------------
 # Featured
 # ---------------------------------------------------------------------------
 

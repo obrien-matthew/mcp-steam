@@ -8,14 +8,17 @@ import httpx
 from .auth import get_api_key, get_http_client, get_steam_id
 from .formatting import (
     format_achievement,
+    format_featured_category,
     format_featured_game,
     format_friend,
     format_game_details,
     format_game_schema,
     format_news_item,
     format_owned_game,
+    format_package_details,
     format_player_bans,
     format_player_summary,
+    format_review,
     format_wishlist_item,
 )
 from .validation import validate_app_id, validate_limit, validate_steam_id
@@ -383,6 +386,70 @@ class SteamClient:
             return format_game_schema(schema)
         except httpx.HTTPStatusError as e:
             self._handle_error(e, "fetching game schema")
+
+    # -- Store Discovery --
+
+    def get_app_reviews(
+        self,
+        app_id: str,
+        review_type: str = "all",
+        limit: int = 10,
+    ) -> dict:
+        app_id_int = validate_app_id(app_id)
+        limit = validate_limit(limit, max_val=20)
+        if review_type not in ("all", "positive", "negative"):
+            review_type = "all"
+        try:
+            data = self._store_request(
+                f"appreviews/{app_id_int}",
+                {
+                    "json": "1",
+                    "filter": "recent",
+                    "language": "english",
+                    "review_type": review_type,
+                    "purchase_type": "all",
+                    "num_per_page": limit,
+                },
+            )
+            if not data.get("success"):
+                raise SteamError(f"Could not fetch reviews for app {app_id_int}")
+            summary = data.get("query_summary", {})
+            reviews = [format_review(r) for r in data.get("reviews", [])]
+            return {
+                "app_id": app_id_int,
+                "total_reviews": summary.get("total_reviews", 0),
+                "total_positive": summary.get("total_positive", 0),
+                "total_negative": summary.get("total_negative", 0),
+                "review_score_desc": summary.get("review_score_desc", ""),
+                "reviews": reviews,
+            }
+        except httpx.HTTPStatusError as e:
+            self._handle_error(e, "fetching app reviews")
+
+    def get_featured_categories(self) -> dict:
+        try:
+            data = self._store_request("api/featuredcategories")
+            categories = {}
+            for key, value in data.items():
+                if isinstance(value, dict) and "items" in value:
+                    categories[key] = format_featured_category(value)
+            return categories
+        except httpx.HTTPStatusError as e:
+            self._handle_error(e, "fetching featured categories")
+
+    def get_package_details(self, package_id: str) -> dict:
+        pid = validate_app_id(package_id)  # same numeric validation
+        try:
+            data = self._store_request(
+                "api/packagedetails",
+                {"packageids": str(pid)},
+            )
+            pkg_data = data.get(str(pid), {})
+            if not pkg_data.get("success"):
+                raise SteamError(f"Package {pid} not found on Steam Store")
+            return format_package_details(pkg_data.get("data", {}))
+        except httpx.HTTPStatusError as e:
+            self._handle_error(e, "fetching package details")
 
     # -- Featured --
 
