@@ -204,10 +204,12 @@ def format_game_schema(data: dict) -> dict:
 
     stats = []
     for stat in available.get("stats", []):
-        stats.append({
-            "name": stat.get("name", ""),
-            "display_name": stat.get("displayName", ""),
-        })
+        stats.append(
+            {
+                "name": stat.get("name", ""),
+                "display_name": stat.get("displayName", ""),
+            }
+        )
 
     result: dict[str, Any] = {
         "game": data.get("gameName", ""),
@@ -297,8 +299,7 @@ def format_package_details(data: dict) -> dict:
     apps = data.get("apps", [])
     if apps:
         result["apps"] = [
-            {"appid": a.get("id"), "name": a.get("name", "")}
-            for a in apps
+            {"appid": a.get("id"), "name": a.get("name", "")} for a in apps
         ]
         result["app_count"] = len(apps)
     platforms = data.get("platforms", {})
