@@ -20,7 +20,7 @@ MCP server for Steam, focused on gaming library management, achievements, stats,
 
 ### 2. Find Your Steam ID
 
-Your Steam ID is the numeric identifier in your profile URL. If your profile URL is `https://steamcommunity.com/profiles/76561198012345678`, your Steam ID is `76561198012345678`.
+Your Steam ID is the numeric identifier in your profile URL. If your profile URL is `https://steamcommunity.com/profiles/1111111111111111`, your Steam ID is `1111111111111111`.
 
 If you use a custom URL (e.g., `/id/username`), use a [Steam ID finder](https://www.steamidfinder.com/) to look up the numeric ID.
 
