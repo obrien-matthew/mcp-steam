@@ -1,0 +1,12 @@
+# Changes here will be overwritten by Copier
+_commit: v0.1.0
+_src_path: gh:obrien-matthew/mcp-template
+author_email: obrien.mlotwis@gmail.com
+author_name: Matthew O'Brien
+coverage_threshold: 50
+github_org: obrien-matthew
+package_name: mcp-steam
+service_dependency: httpx>=0.28.0
+service_name: Steam
+service_slug: steam
+topic_classifier: "Topic :: Games/Entertainment"
