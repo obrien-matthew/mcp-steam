@@ -1,12 +1,23 @@
 """MCP server with Steam tools for gaming library, achievements, and store search."""
 
 import json
+from importlib.metadata import PackageNotFoundError, version
 
 from mcp.server.fastmcp import FastMCP
 
 from .client import SteamClient, SteamError
 
 mcp = FastMCP("mcp-steam")
+
+
+@mcp.tool()
+def get_server_version() -> str:
+    """Return the installed version of the mcp-steam server."""
+    try:
+        return version("mcp-steam")
+    except PackageNotFoundError:
+        return "unknown"
+
 
 _client: SteamClient | None = None
 

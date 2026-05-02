@@ -1,6 +1,7 @@
 """Smoke tests for MCP tool wrappers -- verify JSON output and error handling."""
 
 import json
+from importlib.metadata import version
 
 import httpx
 import respx
@@ -22,11 +23,17 @@ from steam_mcp.server import (
     get_player_stats,
     get_player_summary,
     get_recently_played,
+    get_server_version,
     get_steam_level,
     get_wishlist,
     resolve_vanity_url,
     search_games,
 )
+
+
+class TestGetServerVersion:
+    def test_returns_installed_version(self):
+        assert get_server_version() == version("mcp-steam")
 
 API_BASE = "https://api.steampowered.com"
 STORE_BASE = "https://store.steampowered.com"
