@@ -1,11 +1,12 @@
-"""Smoke tests for MCP tool wrappers -- verify JSON output and error handling."""
+"""Smoke tests for MCP tool wrappers -- verify return shapes and error handling."""
 
-import json
 from importlib.metadata import version
 
 import httpx
+import pytest
 import respx
 
+from steam_mcp.client import SteamError
 from steam_mcp.server import (
     get_achievements,
     get_app_reviews,
@@ -35,6 +36,7 @@ class TestGetServerVersion:
     def test_returns_installed_version(self):
         assert get_server_version() == version("mcp-steam")
 
+
 API_BASE = "https://api.steampowered.com"
 STORE_BASE = "https://store.steampowered.com"
 
@@ -51,7 +53,7 @@ def _mock_store(path, response_json, status=200):
     )
 
 
-class TestToolsReturnValidJson:
+class TestToolsReturnStructuredData:
     @respx.mock
     def test_resolve_vanity_url(self):
         _mock_api(
@@ -73,7 +75,7 @@ class TestToolsReturnValidJson:
                 },
             },
         )
-        result = json.loads(get_owned_games())
+        result = get_owned_games()
         assert isinstance(result, list)
 
     @respx.mock
@@ -84,7 +86,7 @@ class TestToolsReturnValidJson:
                 "response": {"games": []},
             },
         )
-        result = json.loads(get_recently_played())
+        result = get_recently_played()
         assert isinstance(result, list)
 
     @respx.mock
@@ -95,13 +97,13 @@ class TestToolsReturnValidJson:
                 "730": {"success": True, "data": {"name": "CS2", "steam_appid": 730}},
             },
         )
-        result = json.loads(get_game_details("730"))
+        result = get_game_details("730")
         assert result["name"] == "CS2"
 
     @respx.mock
     def test_search_games(self):
         _mock_store("api/storesearch", {"items": []})
-        result = json.loads(search_games("test"))
+        result = search_games("test")
         assert isinstance(result, list)
 
     @respx.mock
@@ -118,7 +120,7 @@ class TestToolsReturnValidJson:
                 "achievementpercentages": {"achievements": []},
             },
         )
-        result = json.loads(get_achievements("730"))
+        result = get_achievements("730")
         assert "total" in result
 
     @respx.mock
@@ -129,7 +131,7 @@ class TestToolsReturnValidJson:
                 "playerstats": {"gameName": "T", "stats": []},
             },
         )
-        result = json.loads(get_player_stats("730"))
+        result = get_player_stats("730")
         assert "game" in result
 
     @respx.mock
@@ -140,13 +142,13 @@ class TestToolsReturnValidJson:
                 "achievementpercentages": {"achievements": []},
             },
         )
-        result = json.loads(get_global_achievement_stats("730"))
+        result = get_global_achievement_stats("730")
         assert isinstance(result, list)
 
     @respx.mock
     def test_get_wishlist(self):
         _mock_store("wishlist/profiles/76561198015781444/wishlistdata", {})
-        result = json.loads(get_wishlist())
+        result = get_wishlist()
         assert isinstance(result, list)
 
     @respx.mock
@@ -157,7 +159,7 @@ class TestToolsReturnValidJson:
                 "appnews": {"newsitems": []},
             },
         )
-        result = json.loads(get_game_news("730"))
+        result = get_game_news("730")
         assert isinstance(result, list)
 
     @respx.mock
@@ -177,7 +179,7 @@ class TestToolsReturnValidJson:
                 },
             },
         )
-        result = json.loads(get_player_summary())
+        result = get_player_summary()
         assert result["name"] == "Me"
 
     @respx.mock
@@ -188,7 +190,7 @@ class TestToolsReturnValidJson:
                 "friendslist": {"friends": []},
             },
         )
-        result = json.loads(get_friend_list())
+        result = get_friend_list()
         assert isinstance(result, list)
 
     @respx.mock
@@ -209,7 +211,7 @@ class TestToolsReturnValidJson:
                 ],
             },
         )
-        result = json.loads(get_player_bans())
+        result = get_player_bans()
         assert "vac_banned" in result
 
     @respx.mock
@@ -220,7 +222,7 @@ class TestToolsReturnValidJson:
                 "response": {"player_level": 42},
             },
         )
-        result = json.loads(get_steam_level())
+        result = get_steam_level()
         assert result["level"] == 42
 
     @respx.mock
@@ -231,7 +233,7 @@ class TestToolsReturnValidJson:
                 "response": {"player_count": 1000},
             },
         )
-        result = json.loads(get_current_players("730"))
+        result = get_current_players("730")
         assert result["player_count"] == 1000
 
     @respx.mock
@@ -245,7 +247,7 @@ class TestToolsReturnValidJson:
                 },
             },
         )
-        result = json.loads(get_game_schema("730"))
+        result = get_game_schema("730")
         assert result["game"] == "T"
 
     @respx.mock
@@ -258,7 +260,7 @@ class TestToolsReturnValidJson:
                 "reviews": [],
             },
         )
-        result = json.loads(get_app_reviews("730"))
+        result = get_app_reviews("730")
         assert "total_reviews" in result
 
     @respx.mock
@@ -270,7 +272,7 @@ class TestToolsReturnValidJson:
                 "status": 1,
             },
         )
-        result = json.loads(get_featured_categories())
+        result = get_featured_categories()
         assert "specials" in result
 
     @respx.mock
@@ -281,7 +283,7 @@ class TestToolsReturnValidJson:
                 "123": {"success": True, "data": {"name": "Pack"}},
             },
         )
-        result = json.loads(get_package_details("123"))
+        result = get_package_details("123")
         assert result["name"] == "Pack"
 
     @respx.mock
@@ -294,17 +296,17 @@ class TestToolsReturnValidJson:
                 "featured_linux": [],
             },
         )
-        result = json.loads(get_featured_games())
+        result = get_featured_games()
         assert "total" in result
 
 
-class TestToolsHandleErrors:
+class TestToolsPropagateErrors:
     @respx.mock
-    def test_returns_error_string(self):
+    def test_steam_error_propagates(self):
         _mock_api("IPlayerService/GetOwnedGames/v1/", {}, status=500)
-        result = get_owned_games()
-        assert result.startswith("Error:")
+        with pytest.raises(SteamError):
+            get_owned_games()
 
-    def test_returns_validation_error(self):
-        result = get_game_details("not-a-number")
-        assert result.startswith("Error:")
+    def test_validation_error_propagates(self):
+        with pytest.raises((ValueError, SteamError)):
+            get_game_details("not-a-number")
