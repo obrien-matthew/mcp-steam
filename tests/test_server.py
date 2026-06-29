@@ -147,9 +147,33 @@ class TestToolsReturnStructuredData:
 
     @respx.mock
     def test_get_wishlist(self):
-        _mock_store("wishlist/profiles/76561198015781444/wishlistdata", {})
+        _mock_api(
+            "IWishlistService/GetWishlist/v1/",
+            {
+                "response": {
+                    "items": [{"appid": 730, "priority": 1, "date_added": 1700000000}]
+                }
+            },
+        )
+        _mock_store(
+            "api/appdetails",
+            {
+                "730": {
+                    "success": True,
+                    "data": {
+                        "name": "CS2",
+                        "price_overview": {
+                            "final_formatted": "$14.99",
+                            "discount_percent": 0,
+                        },
+                    },
+                }
+            },
+        )
         result = get_wishlist()
         assert isinstance(result, list)
+        assert result[0]["appid"] == 730
+        assert result[0]["name"] == "CS2"
 
     @respx.mock
     def test_get_game_news(self):

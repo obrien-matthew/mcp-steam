@@ -134,25 +134,32 @@ def format_news_item(item: dict) -> dict:
     return result
 
 
-def format_wishlist_item(appid: str, item: dict) -> dict:
-    """Format a wishlist item."""
+def format_wishlist_item(entry: dict, details: dict | None = None) -> dict:
+    """Format a wishlist item.
+
+    entry: the wishlist record from IWishlistService/GetWishlist
+        (appid, priority, date_added).
+    details: the matching Steam Store appdetails `data` block, if the
+        lookup succeeded -- supplies the name and current price/discount.
+    """
+    appid = entry.get("appid")
     result: dict[str, Any] = {
-        "name": item.get("name", "Unknown"),
-        "appid": int(appid),
-        "priority": item.get("priority", 0),
+        "appid": appid,
+        "priority": entry.get("priority", 0),
     }
-    subs = item.get("subs", [])
-    if subs:
-        for sub in subs:
-            if "price" in sub:
-                # Price is in cents
-                price_cents = sub["price"]
-                result["price"] = f"${price_cents / 100:.2f}"
-                discount = sub.get("discount_pct", 0)
-                if discount > 0:
-                    result["discount_percent"] = discount
-                break
-    added = item.get("added")
+    if details:
+        result["name"] = details.get("name", "Unknown")
+        price_overview = details.get("price_overview")
+        if price_overview:
+            result["price"] = price_overview.get("final_formatted", "")
+            discount = price_overview.get("discount_percent", 0)
+            if discount > 0:
+                result["discount_percent"] = discount
+        elif details.get("is_free"):
+            result["price"] = "Free"
+    if "name" not in result:
+        result["name"] = f"App {appid}"
+    added = entry.get("date_added")
     if added:
         result["added_at"] = datetime.fromtimestamp(added, tz=UTC).isoformat()
     return result

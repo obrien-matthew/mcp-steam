@@ -242,12 +242,13 @@ class TestFormatNewsItem:
 class TestFormatWishlistItem:
     def test_with_price(self):
         result = format_wishlist_item(
-            "730",
+            {"appid": 730, "priority": 1, "date_added": 1700000000},
             {
                 "name": "CS2",
-                "priority": 1,
-                "subs": [{"price": 1499, "discount_pct": 0}],
-                "added": 1700000000,
+                "price_overview": {
+                    "final_formatted": "$14.99",
+                    "discount_percent": 0,
+                },
             },
         )
         assert result["name"] == "CS2"
@@ -258,13 +259,21 @@ class TestFormatWishlistItem:
 
     def test_with_discount(self):
         result = format_wishlist_item(
-            "1",
+            {"appid": 1, "priority": 0},
             {
                 "name": "Test",
-                "subs": [{"price": 999, "discount_pct": 50}],
+                "price_overview": {
+                    "final_formatted": "$4.99",
+                    "discount_percent": 50,
+                },
             },
         )
         assert result["discount_percent"] == 50
+
+    def test_details_unavailable(self):
+        result = format_wishlist_item({"appid": 42, "priority": 0}, None)
+        assert result["name"] == "App 42"
+        assert "price" not in result
 
 
 class TestFormatFriend:
