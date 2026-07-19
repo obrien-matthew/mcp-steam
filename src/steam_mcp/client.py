@@ -298,10 +298,14 @@ class SteamClient:
                 "api/appdetails",
                 {"appids": str(appid), "filters": "basic,price_overview"},
             )
-            app = data.get(str(appid), {})
+            app = data.get(str(appid), {}) if isinstance(data, dict) else {}
             if app.get("success") and isinstance(app.get("data"), dict):
                 details = app["data"]
-        except httpx.HTTPStatusError:
+        except (httpx.HTTPError, ValueError):
+            # Any lookup failure -- HTTP status, transport error, or a
+            # non-JSON/null body (Steam returns 200 + `null` when the
+            # appdetails endpoint is rate limited) -- degrades to an
+            # ID-only entry instead of failing the whole wishlist.
             details = None
         return format_wishlist_item(entry, details)
 
