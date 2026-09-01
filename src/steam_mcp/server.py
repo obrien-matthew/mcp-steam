@@ -9,6 +9,7 @@ Tool return-type conventions:
 """
 
 from importlib.metadata import PackageNotFoundError, version
+from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
@@ -84,7 +85,7 @@ def get_recently_played(limit: int = 10) -> list[dict]:
 
 
 @mcp.tool()
-def get_game_details(app_id: str) -> dict:
+def get_game_details(app_id: str) -> dict[str, Any]:
     """Get detailed store information for a Steam game.
 
     Returns name, description, price, genres, platforms, metacritic
@@ -108,7 +109,7 @@ def search_games(query: str, limit: int = 10) -> list[dict]:
 
 
 @mcp.tool()
-def get_achievements(app_id: str) -> dict:
+def get_achievements(app_id: str) -> dict[str, Any]:
     """Get your achievement progress for a Steam game.
 
     Returns each achievement's unlock status, description, unlock time,
@@ -118,7 +119,7 @@ def get_achievements(app_id: str) -> dict:
 
 
 @mcp.tool()
-def get_player_stats(app_id: str) -> dict:
+def get_player_stats(app_id: str) -> dict[str, Any]:
     """Get your gameplay statistics for a Steam game.
 
     Returns game-specific stats like kills, deaths, time played, etc.
@@ -172,7 +173,7 @@ def get_game_news(app_id: str, count: int = 5) -> list[dict]:
 
 
 @mcp.tool()
-def get_player_summary(steam_id: str = "") -> dict:
+def get_player_summary(steam_id: str = "") -> dict[str, Any]:
     """Get a Steam profile summary.
 
     Returns display name, online status, profile URL, and currently
@@ -201,7 +202,7 @@ def get_friend_list(steam_id: str = "") -> list[dict]:
 
 
 @mcp.tool()
-def get_player_bans(steam_id: str = "") -> dict:
+def get_player_bans(steam_id: str = "") -> dict[str, Any]:
     """Get ban status for a Steam player.
 
     Returns VAC bans, community bans, game bans, and trade/economy ban status.
@@ -212,7 +213,7 @@ def get_player_bans(steam_id: str = "") -> dict:
 
 
 @mcp.tool()
-def get_steam_level(steam_id: str = "") -> dict:
+def get_steam_level(steam_id: str = "") -> dict[str, Any]:
     """Get the Steam level for a player.
 
     steam_id: optional Steam ID or vanity name. Defaults to your own profile.
@@ -226,7 +227,7 @@ def get_steam_level(steam_id: str = "") -> dict:
 
 
 @mcp.tool()
-def get_current_players(app_id: str) -> dict:
+def get_current_players(app_id: str) -> dict[str, Any]:
     """Get the current number of players in a Steam game.
 
     Returns the live concurrent player count.
@@ -235,7 +236,7 @@ def get_current_players(app_id: str) -> dict:
 
 
 @mcp.tool()
-def get_game_schema(app_id: str) -> dict:
+def get_game_schema(app_id: str) -> dict[str, Any]:
     """Get achievement and stat definitions for a Steam game.
 
     Returns achievement display names, descriptions, and hidden status,
@@ -255,7 +256,7 @@ def get_app_reviews(
     app_id: str,
     review_type: str = "all",
     limit: int = 10,
-) -> dict:
+) -> dict[str, Any]:
     """Get user reviews for a Steam game.
 
     Returns review text, recommendation, playtime, and helpfulness votes.
@@ -267,7 +268,7 @@ def get_app_reviews(
 
 
 @mcp.tool()
-def get_featured_categories() -> dict:
+def get_featured_categories() -> dict[str, Any]:
     """Get Steam store featured categories.
 
     Returns games organized by category: Top Sellers, New Releases,
@@ -278,7 +279,7 @@ def get_featured_categories() -> dict:
 
 
 @mcp.tool()
-def get_package_details(package_id: str) -> dict:
+def get_package_details(package_id: str) -> dict[str, Any]:
     """Get details for a Steam package or bundle.
 
     Returns package name, price, discount, included apps, platforms,
@@ -293,7 +294,7 @@ def get_package_details(package_id: str) -> dict:
 
 
 @mcp.tool()
-def get_featured_games() -> dict:
+def get_featured_games() -> dict[str, Any]:
     """Get currently featured and on-sale games on Steam.
 
     Returns featured games split into on-sale (with discounts and prices)
