@@ -1,9 +1,14 @@
 """Steam API key validation and HTTP client singleton."""
 
+import logging
 import os
 import sys
 
 import httpx
+
+# httpx logs every request URL at INFO, and the API key is a query parameter.
+# FastMCP enables INFO logging, so silence httpx below WARNING.
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 _client: httpx.Client | None = None
 _steam_id: str | None = None

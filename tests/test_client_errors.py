@@ -1,3 +1,5 @@
+import logging
+
 import httpx
 import pytest
 import respx
@@ -71,6 +73,16 @@ class TestHandleError:
         stderr = capsys.readouterr().err
         assert "GetOwnedGames" in stderr
         assert FAKE_API_KEY not in stderr
+
+    @respx.mock
+    def test_api_key_not_in_request_logs(self, client, caplog):
+        # FastMCP enables INFO logging, and httpx logs every request URL at INFO.
+        respx.get(f"{API_BASE}/IPlayerService/GetOwnedGames/v1/").mock(
+            return_value=httpx.Response(200, json={"response": {"games": []}})
+        )
+        with caplog.at_level(logging.DEBUG):
+            client.get_owned_games()
+        assert FAKE_API_KEY not in caplog.text
 
 
 class TestStoreApiErrors:
