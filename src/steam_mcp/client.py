@@ -5,7 +5,7 @@ from typing import Any, NoReturn
 
 import httpx
 
-from .auth import get_api_key, get_http_client, get_steam_id
+from .auth import get_api_key, get_http_client, get_steam_id, redact_secrets
 from .formatting import (
     format_achievement,
     format_featured_category,
@@ -57,7 +57,7 @@ class SteamClient:
                 msg = f"Rate limited while {action}. Please try again shortly."
             elif status_code == 500:
                 msg = f"Steam server error while {action}. Try again later."
-        print(f"{msg}: {e}", file=sys.stderr)
+        print(redact_secrets(f"{msg}: {e}"), file=sys.stderr)
         raise SteamError(msg, status_code) from e
 
     def _api_request(self, endpoint: str, params: dict[str, Any] | None = None) -> dict:
