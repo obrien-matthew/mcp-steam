@@ -4,6 +4,8 @@ import respx
 
 from steam_mcp.client import SteamClient, SteamError
 
+from .conftest import FAKE_API_KEY
+
 API_BASE = "https://api.steampowered.com"
 STORE_BASE = "https://store.steampowered.com"
 
@@ -58,6 +60,17 @@ class TestHandleError:
         with pytest.raises(SteamError, match="Steam API error") as exc_info:
             client.get_steam_level()
         assert exc_info.value.status_code == 502
+
+    @respx.mock
+    def test_api_key_not_logged(self, client, capsys):
+        respx.get(f"{API_BASE}/IPlayerService/GetOwnedGames/v1/").mock(
+            return_value=httpx.Response(403)
+        )
+        with pytest.raises(SteamError):
+            client.get_owned_games()
+        stderr = capsys.readouterr().err
+        assert "GetOwnedGames" in stderr
+        assert FAKE_API_KEY not in stderr
 
 
 class TestStoreApiErrors:

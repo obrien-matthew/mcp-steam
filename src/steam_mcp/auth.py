@@ -9,6 +9,18 @@ _client: httpx.Client | None = None
 _steam_id: str | None = None
 
 
+def redact_secrets(text: str) -> str:
+    """Mask the Steam API key in text before it is logged.
+
+    httpx exception messages include the full request URL, which carries
+    the key as a query parameter.
+    """
+    api_key = os.environ.get("STEAM_API_KEY")
+    if api_key:
+        text = text.replace(api_key, "***")
+    return text
+
+
 def get_steam_id() -> str:
     """Return the configured Steam ID."""
     global _steam_id
@@ -64,13 +76,16 @@ def get_http_client() -> httpx.Client:
             )
     except httpx.HTTPStatusError as e:
         client.close()
-        print(f"Steam API key verification failed: {e}", file=sys.stderr)
+        print(
+            redact_secrets(f"Steam API key verification failed: {e}"),
+            file=sys.stderr,
+        )
         raise RuntimeError(
             "Failed to verify Steam API key. Please check your credentials."
         ) from e
     except Exception as e:
         client.close()
-        print(f"Steam API connection failed: {e}", file=sys.stderr)
+        print(redact_secrets(f"Steam API connection failed: {e}"), file=sys.stderr)
         raise RuntimeError(
             "Failed to connect to Steam API. Please check your network."
         ) from e
