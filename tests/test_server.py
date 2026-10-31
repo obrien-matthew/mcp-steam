@@ -147,9 +147,52 @@ class TestToolsReturnStructuredData:
 
     @respx.mock
     def test_get_wishlist(self):
-        _mock_store("wishlist/profiles/76561198015781444/wishlistdata", {})
+        _mock_api(
+            "IWishlistService/GetWishlist/v1/",
+            {
+                "response": {
+                    "items": [{"appid": 730, "priority": 1, "date_added": 1700000000}]
+                }
+            },
+        )
+        _mock_store(
+            "api/appdetails",
+            {
+                "730": {
+                    "success": True,
+                    "data": {
+                        "name": "CS2",
+                        "price_overview": {
+                            "final_formatted": "$14.99",
+                            "discount_percent": 0,
+                        },
+                    },
+                }
+            },
+        )
         result = get_wishlist()
         assert isinstance(result, list)
+        assert result[0]["appid"] == 730
+        assert result[0]["name"] == "CS2"
+
+    @respx.mock
+    def test_get_wishlist_degrades_when_appdetails_rate_limited(self):
+        # Steam's appdetails endpoint returns HTTP 200 with a literal `null`
+        # body when rate limited (not a 4xx). Enrichment must degrade the
+        # entry to an ID-only result rather than crash the whole wishlist.
+        _mock_api(
+            "IWishlistService/GetWishlist/v1/",
+            {"response": {"items": [{"appid": 730, "priority": 1}]}},
+        )
+        respx.get(f"{STORE_BASE}/api/appdetails").mock(
+            return_value=httpx.Response(
+                200, content=b"null", headers={"content-type": "application/json"}
+            )
+        )
+        result = get_wishlist()
+        assert result[0]["appid"] == 730
+        assert result[0]["name"] == "App 730"
+        assert "price" not in result[0]
 
     @respx.mock
     def test_get_game_news(self):

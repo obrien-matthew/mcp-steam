@@ -266,24 +266,48 @@ class SteamClient:
     def get_wishlist(self, limit: int = 50) -> list[dict]:
         limit = validate_limit(limit, max_val=100)
         try:
-            data = self._store_request(
-                f"wishlist/profiles/{self._steam_id}/wishlistdata",
+            data = self._api_request(
+                "IWishlistService/GetWishlist/v1/",
+                {"steamid": self._steam_id},
             )
-            items = [
-                format_wishlist_item(appid, info)
-                for appid, info in data.items()
-                if isinstance(info, dict)
-            ]
-            # Sort by priority (0 = no priority, otherwise lower = higher priority)
-            items.sort(
-                key=lambda x: (
-                    x.get("priority", 0) == 0,
-                    x.get("priority", 0),
-                )
-            )
-            return items[:limit]
         except httpx.HTTPStatusError as e:
             self._handle_error(e, "fetching wishlist")
+        entries = data.get("response", {}).get("items", [])
+        # Sort by priority (0 = no priority, sorts last), then most recently added.
+        entries.sort(
+            key=lambda e: (
+                e.get("priority", 0) == 0,
+                e.get("priority", 0),
+                -(e.get("date_added") or 0),
+            )
+        )
+        return [self._wishlist_entry_with_details(e) for e in entries[:limit]]
+
+    def _wishlist_entry_with_details(self, entry: dict) -> dict:
+        """Enrich a wishlist entry with the store name and current price.
+
+        The wishlist API only returns app IDs, so each game's name and
+        price/discount come from a Store appdetails lookup. A failed lookup
+        degrades gracefully to an ID-only entry rather than failing the
+        whole wishlist.
+        """
+        details: dict | None = None
+        appid = entry.get("appid")
+        try:
+            data = self._store_request(
+                "api/appdetails",
+                {"appids": str(appid), "filters": "basic,price_overview"},
+            )
+            app = data.get(str(appid), {}) if isinstance(data, dict) else {}
+            if app.get("success") and isinstance(app.get("data"), dict):
+                details = app["data"]
+        except (httpx.HTTPError, ValueError):
+            # Any lookup failure -- HTTP status, transport error, or a
+            # non-JSON/null body (Steam returns 200 + `null` when the
+            # appdetails endpoint is rate limited) -- degrades to an
+            # ID-only entry instead of failing the whole wishlist.
+            details = None
+        return format_wishlist_item(entry, details)
 
     # -- News --
 
